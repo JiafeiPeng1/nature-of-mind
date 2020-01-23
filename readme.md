@@ -1,1 +1,1 @@
-"nature-of-mind" 
+nature-of-mind
