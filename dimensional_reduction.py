@@ -271,3 +271,118 @@ lm.fit(scaler.fit_transform(X_train), y_train)
 r_squared = lm.score(scaler.transform(X_test), y_test)
 print('The model can explain {0:.1%} of the variance in the test set using {1:} features.'.format(r_squared, len(lm.coef_)))
 
+###################
+## Feature extraction
+###################
+
+## PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Scale the data
+scaler = StandardScaler()
+ansur_std = scaler.fit_transform(ansur_df)
+
+# Apply PCA
+pca = PCA()
+pca.fit(ansur_std)
+
+# Inspect the explained variance ratio per component
+print(pca.explained_variance_ratio_)
+
+# Print the cumulative sum of the explained variance ratio
+print(pca.explained_variance_ratio_.cumsum())
+
+PCA (pipeline)
+# Build the pipeline
+pipe = Pipeline([('scaler', StandardScaler()),
+         ('reducer', PCA(n_components=2))])
+
+# Fit it to the dataset and extract the component vectors
+pipe.fit(poke_df)
+vectors = pipe.steps[1][1].components_.round(2)
+
+# Print feature effects
+print('PC 1 effects = ' + str(dict(zip(poke_df.columns, vectors[0]))))
+print('PC 2 effects = ' + str(dict(zip(poke_df.columns, vectors[1]))))
+
+# Fit the pipeline to poke_df and transform the data
+pc = pipe.fit_transform(poke_df)
+print(pc)
+
+# Add the 2 components to poke_cat_df
+poke_cat_df['PC 1'] = pc[:, 0]
+poke_cat_df['PC 2'] = pc[:, 1]
+
+# Use the Type feature to color the PC 1 vs PC 2 scatterplot
+sns.scatterplot(data=poke_cat_df, x='PC 1', y='PC 2', hue='Type')
+plt.show()
+
+
+## PCA + classifier
+# Build the pipeline
+pipe = Pipeline([
+('scaler', StandardScaler()),
+('reducer', PCA(n_components=2)),
+('classifier', RandomForestClassifier(random_state=0))])
+
+# Fit the pipeline to the training data
+pipe.fit(X_train, y_train)
+
+# Prints the explained variance ratio
+print(pipe.steps[1][1].explained_variance_ratio_)
+
+# Score the accuracy on the test set
+accuracy = pipe.score(X_test, y_test)
+
+# Prints the model accuracy
+print('{0:.1%} test set accuracy'.format(accuracy))
+
+## PCA - select ratio of explanation
+# Let PCA select 90% of the variance
+pipe = Pipeline([('scaler', StandardScaler()), ('reducer', PCA(n_components=0.9))])
+
+# Fit the pipe to the data
+pipe.fit(ansur_df)
+print('{} components selected'.format(len(pipe.steps[1][1].components_)))
+
+## PCA - elbow
+# Let PCA select 10 components
+pipe = Pipeline([('scaler', StandardScaler()), ('reducer', PCA(n_components=10))])
+
+# Fit the pipe to the data
+pipe.fit(ansur_df)
+print('{} components selected'.format(len(pipe.steps[1][1].components_)))
+
+# Plot the explained variance ratio
+plt.plot(pipe.steps[1][1].explained_variance_ratio_)
+plt.xlabel('Principal component index')
+plt.ylabel('Explained variance ratio')
+plt.show()
+
+# Perform the necessary imports
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+import matplotlib.pyplot as plt
+
+# Create scaler: scaler
+scaler = StandardScaler()
+
+# Create a PCA instance: pca
+pca = PCA()
+
+# Create pipeline: pipeline
+pipeline = make_pipeline(scaler, pca)
+
+# Fit the pipeline to 'samples'
+pipeline.fit(samples)
+
+# Plot the explained variances
+features = range(pca.n_components_)
+plt.bar(features, pca.explained_variance_)
+plt.xlabel('PCA feature')
+plt.ylabel('variance')
+plt.xticks(features)
+plt.show()
+
